@@ -1,4 +1,4 @@
-import { PUBLIC, Roles } from '@common/decorators';
+import { PUBLIC, ROLES } from '@common/decorators';
 import {
   CanActivate,
   ExecutionContext,
@@ -12,12 +12,15 @@ export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
-    const roles = this.reflector.get(Roles, context.getHandler());
     const publicValue = this.reflector.get(PUBLIC, context.getHandler());
     if (publicValue) return true;
+    const request = context.switchToHttp().getRequest();
+    const roles = this.reflector.getAllAndMerge(ROLES, [
+      context.getClass(),
+      context.getHandler(),
+    ]);
     if (!roles.includes(request.user.role))
-      throw new UnauthorizedException('not allowed');
+      throw new UnauthorizedException('you are not allowed');
     return true;
   }
 }

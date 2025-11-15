@@ -23,11 +23,24 @@ export class AbstractRepository<T> {
     return this.model.findOne(filter, projection, options);
   }
 
-  public async update(
+  public async getAll(
+    filter: RootFilterQuery<T>,
+    projection?: ProjectionType<T>,
+    options?: QueryOptions,
+    query?: any,
+  ) {
+    let limit = query.limit;
+    let skip = query.page * (limit - 1);
+    options!.limit = limit;
+    options!.skip = skip;
+    return this.model.find(filter, projection, options);
+  }
+
+  public async updateOne(
     filter: RootFilterQuery<T>,
     update: UpdateQuery<T>,
     options?: MongooseUpdateQueryOptions<T>,
   ) {
-    return await this.model.updateOne(filter, update, options);
+    return await this.model.findOneAndUpdate(filter, update, options);
   }
 }

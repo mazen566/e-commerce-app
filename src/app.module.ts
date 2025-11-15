@@ -1,3 +1,4 @@
+import { ProductModule } from './modules/product/product.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -9,6 +10,7 @@ import { BrandModule } from './modules/brand/brand.module';
 import { CategoryModule } from './modules/category/category.module';
 import { UserMongoModule } from './shared';
 import { CustomerModule } from '@modules/customer/customer.module';
+import { CommonModule } from './shared/modules/common.module';
 
 @Module({
   imports: [
@@ -22,10 +24,12 @@ import { CustomerModule } from '@modules/customer/customer.module';
         uri: configService.get('db').url,
       }),
     }),
-    UserMongoModule,
+    // UserMongoModule,
+    CommonModule,
     AuthModule,
-    BrandModule,
+    ProductModule,
     CategoryModule,
+    BrandModule,
     CustomerModule,
   ],
   controllers: [AppController],

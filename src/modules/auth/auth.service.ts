@@ -7,7 +7,6 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { CustomerRepository } from './../../models/customer/customer.repository';
 import {
   ForgetPasswordDTO,
   LoginDTO,
@@ -15,12 +14,14 @@ import {
   ResetPasswordDTO,
 } from './dto';
 import { Customer } from './entities/auth.entity';
+import { UserRepository, CustomerRepository } from '@models/index';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly configService: ConfigService,
     private readonly customerRepository: CustomerRepository,
+    private readonly userRepository: UserRepository,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -52,14 +53,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid OTP');
     if (customer.otpExpiry! < new Date())
       throw new UnauthorizedException('OTP has expired');
-    await this.customerRepository.update(
+    await this.customerRepository.updateOne(
       { email: verifyAccountDTO.email },
       { isVerified: true, $unset: { otp: '', otpExpiry: '' } },
     );
   }
 
   async login(loginDto: LoginDTO) {
-    const customerExist = await this.customerRepository.getOne({
+    const customerExist = await this.userRepository.getOne({
       email: loginDto.email,
     });
     if (customerExist?.isVerified === false)
@@ -90,7 +91,7 @@ export class AuthService {
     });
     if (!customerExist) throw new UnauthorizedException('Invalid credentials');
     const otp = generateOtp();
-    await this.customerRepository.update(
+    await this.customerRepository.updateOne(
       { email: forgetPasswordDTO.email },
       { $set: { otp } },
     );
@@ -111,7 +112,7 @@ export class AuthService {
     if (customerExist.otp !== resetPasswordDTO.otp)
       throw new UnauthorizedException('Invalid OTP');
     const hashedPassword = await bcrypt.hash(resetPasswordDTO.newPassword, 10);
-    await this.customerRepository.update(
+    await this.customerRepository.updateOne(
       { email: resetPasswordDTO.email },
       { password: hashedPassword, $unset: { otp: '' } },
     );
